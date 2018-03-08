@@ -117,5 +117,5 @@ body .children
 
 /*content tags*/
 .contentTagText
-{   color:#f74;
+{   color:#c42;
 }
