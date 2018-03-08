@@ -1,0 +1,121 @@
+/* Style: Workflowy BenBrown
+Based on: Workflowy dark minimalist
+history:
+20180308  created, forked from: Workflowy dark minimalist
+20180308  changed base font to Lucida Console, color light gray.
+20180308  changed note font to not italic, color light gray.
+20180308  added full screen width, smaller margins, hiding unwanted stuff.
+20180308  changed bullet colors: closed bullets are dark green (unlit), opened bullets are bright green (lit).
+20180308  changed sub-item left margin line to dashed.
+20180308 changed tag color to orange.
+*/
+/* -------------------------------------------------------------------------------------------------------- general -+- */
+/* main frame and background */
+body
+, body .page
+, body #pageContainer
+{   background-color: #222;
+    border: none;
+}
+
+/* base font */
+body .name
+{   color: #e0e0e0;
+    font-family: Lucida Console, monospace, Monospaced;
+    font-size: 13px;
+}
+
+/* smaller margins */
+.mainTreeRoot
+{   padding:0 !important;
+}
+.page.active 
+{	width: 100% !important;
+    transform: none !important;
+}
+/* hide unwanted stuff */
+.footer
+, .facebookLike
+, #bottomLinks iframe 
+, .proPitch
+{	display:none;
+}
+
+/* -------------------------------------------------------------------------------------------------------- bullets -+- */
+/* base bullet */
+.project>.name>.bullet
+, .project.task>.name>.bullet
+{   background-image: none;
+    height: 6px;
+    width: 6px;
+    background-color: #eee;
+    border-radius: 12px;
+    margin-top: 8px !important;
+    margin-left: 7px;
+    transition: all 0.3s;
+}
+
+/* bullets for items with sub-items */
+.project>.name>.bullet
+{   height: 10px;
+    width: 10px;
+    background-color: #383;
+    border-radius: 12px;
+    margin-top: 8px !important;
+    margin-left: 5px;
+}
+
+/* bullets for expanded items */
+.project.open>.name>.bullet
+{   height: 10px;
+    width: 10px;
+    background-color: #6f6;
+    border-radius: 12px;
+    margin-top: 8px !important;
+    margin-left: 5px;
+}
+
+/* ---------------------------------------------------------------------------------------------------------- notes -+- */
+/* base note */
+.noted>.notes>.content
+{   color: #bbb;
+    font-size: 15px;
+}
+
+/* ---------------------------------------------------------------------------------------------------------- items -+- */
+/* sub-item left margin line */
+body .children
+{   border-left: 1px dashed #444;
+}
+
+/* item hightlighted */
+.project.highlighted::before
+, .project.moving::before
+, .project.tapped::before
+, .draggableNameClone::before
+{   display: block;
+    content: '';
+    height: 100%;
+    left: -5px;
+    padding: 2px 5px 1px;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    background: #333;
+}
+
+/* checked items */
+.project.done>.name
+, .project.doneAppearance>.name
+, .selected .project.done .project>.name
+, .selected .project.doneAppearance .project>.name
+{   color: #555;
+}
+
+/*content tags*/
+.contentTagText
+{   color:#f74;
+}
