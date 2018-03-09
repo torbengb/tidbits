@@ -8,7 +8,7 @@ history:
 20180308 changed bullet colors: closed bullets are dark green (unlit), opened bullets are bright green (lit).
 20180308 changed sub-item left margin line to dashed.
 20180308 changed tag color to orange.
-20180309 prevent overflow on right window edge.
+20180309 prevent overflow on right window edge, completed text brighter grey.
 */
 /* -------------------------------------------------------------------------------------------------------- general -+- */
 /* main frame and background */
