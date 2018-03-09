@@ -1,13 +1,14 @@
 /* Style: Workflowy BenBrown
 Based on: Workflowy dark minimalist
 history:
-20180308  created, forked from: Workflowy dark minimalist
-20180308  changed base font to Lucida Console, color light gray.
-20180308  changed note font to not italic, color light gray.
-20180308  added full screen width, smaller margins, hiding unwanted stuff.
-20180308  changed bullet colors: closed bullets are dark green (unlit), opened bullets are bright green (lit).
-20180308  changed sub-item left margin line to dashed.
+20180308 created, forked from: Workflowy dark minimalist
+20180308 changed base font to Lucida Console, color light gray.
+20180308 changed note font to not italic, color light gray.
+20180308 added full screen width, smaller margins, hiding unwanted stuff.
+20180308 changed bullet colors: closed bullets are dark green (unlit), opened bullets are bright green (lit).
+20180308 changed sub-item left margin line to dashed.
 20180308 changed tag color to orange.
+20180309 prevent overflow on right window edge.
 */
 /* -------------------------------------------------------------------------------------------------------- general -+- */
 /* main frame and background */
@@ -29,8 +30,8 @@ body .name
 .mainTreeRoot
 {   padding:0 !important;
 }
-.page.active 
-{	width: 100% !important;
+.page.active
+{	width: 92% !important;
     transform: none !important;
 }
 /* hide unwanted stuff */
