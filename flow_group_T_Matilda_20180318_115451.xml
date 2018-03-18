@@ -1,0 +1,772 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<data version="1.34.0">
+  <trigger type="wifi_scan_results_available">
+    <useDefaultName>true</useDefaultName>
+    <name>WiFi Scan Results Available</name>
+    <enabled>false</enabled>
+  </trigger>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit family? </name>
+    <expression>value == "global_matilda_family" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit friends? </name>
+    <expression>value == "global_matilda_friends" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit home? </name>
+    <expression>value == "global_matilda_home" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit ignore? </name>
+    <expression>value == "global_matilda_ignore" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit neighborhood? </name>
+    <expression>value == "global_matilda_neighborhood" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit silent? </name>
+    <expression>value == "global_matilda_silent" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Edit work? </name>
+    <expression>value == "global_matilda_work" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: match_found</name>
+    <expression>match_found</expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Family"</name>
+    <expression>value == "Family" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Friends"</name>
+    <expression>value == "Friends" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Home"</name>
+    <expression>value == "Home" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Ignore"</name>
+    <expression>value == "Ignore" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Neighborhood"</name>
+    <expression>value == "Neighborhood" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Silent"</name>
+    <expression>value == "Silent" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>true</useDefaultName>
+    <name>Expression: value == "Work"</name>
+    <expression>value == "Work" </expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Expression: value == "Yes reset"</name>
+    <expression>value == "Yes reset"</expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>New networks found?</name>
+    <expression>global_matilda_can_add</expression>
+  </condition>
+  <condition type="expression">
+    <useDefaultName>false</useDefaultName>
+    <name>Valid choice?</name>
+    <expression>operation == "ok" </expression>
+  </condition>
+  <action type="execute_flows">
+    <useDefaultName>false</useDefaultName>
+    <name>Calls Flow: add</name>
+    <includeFlowNamePatternList>Matilda 4: Add SSIDs to area</includeFlowNamePatternList>
+    <excludeFlowNamePatternList></excludeFlowNamePatternList>
+    <skipDisabledFlowsWithoutError>false</skipDisabledFlowsWithoutError>
+    <waitForFlowsToFinish>false</waitForFlowsToFinish>
+    <returnLocalVariablesToCallingFlow>false</returnLocalVariablesToCallingFlow>
+  </action>
+  <action type="execute_flows">
+    <useDefaultName>false</useDefaultName>
+    <name>Calls Flow: edit</name>
+    <includeFlowNamePatternList>Matilda 5: edit areas</includeFlowNamePatternList>
+    <excludeFlowNamePatternList></excludeFlowNamePatternList>
+    <skipDisabledFlowsWithoutError>false</skipDisabledFlowsWithoutError>
+    <waitForFlowsToFinish>false</waitForFlowsToFinish>
+    <returnLocalVariablesToCallingFlow>false</returnLocalVariablesToCallingFlow>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Check result</name>
+    <script>// init:
+match_found=false ;
+global_matilda_can_add=false ;
+global_matilda_new=newList() ; // empty list. 
+
+//check for empty result list
+if ( isEmpty (access_points) ) 
+{ log("No scan results; return. ") ; 
+  return ;
+} else { log(access_points) ; } 
+
+// Loop through the results and for each value, check if it's contained in any of the lists:
+for ( curr_ssid in access_points ) 
+{ //for access_points
+  for ( curr_area in global_matilda_areas )
+  {//for area
+    /* todo:
+    // skip the value at index 0:
+    if (curr_area == getElement( ** not sure here! ** ) { continue; } 
+    */
+    if (match_found) {continue;} //if
+    //log(curr_ssid + " for area=" + curr_area) ;
+    if ( containsElement(curr_area,
+           toLowerCase(curr_ssid)) ) //if we already know this network - 
+    {//if
+      match_found=true;
+      global_matilda_geo = getElement(curr_area, 0); //this is where we are! 
+      log("global_matilda_geo="
+        +global_matilda_geo) ;
+      return;//no need to learn more when we already know where we are. 
+    } //if contains
+    //log(curr_ssid + " not in this area. ");
+  } //for area 
+
+//jump to next ssid if we already know this one:
+  if (match_found) {continue;} //if
+
+// if we get this far then we have found a new network:
+  //log(curr_ssid + " is new! ");
+  addElement(global_matilda_new, 
+    toLowerCase(curr_ssid)) ;
+  log("new=" + global_matilda_new) ;
+  global_matilda_can_add=true; //we have new networks to store
+/* deprecated by 1 line above:
+  if(isEmpty(global_matilda_new) ) 
+  { //set: no more networks to add:
+    global_matilda_can_add=false ;} 
+  else { //we have new networks to store:
+    global_matilda_can_add=true ;
+  } 
+*/
+
+} //for access_points 
+
+log("global_matilda_can_add="+global_matilda_can_add+", list="+global_matilda_new) ;
+</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Convert choice to list name</name>
+    <script>log(value) ;
+
+if(value=="Home") 
+value="global_matilda_home";
+
+if(value=="Neighborhood") value="global_matilda_neighborhood";
+
+if(value=="Family") value="global_matilda_family";
+
+if(value=="Friends") value="global_matilda_friends";
+
+if(value=="Work") 
+value="global_matilda_work";
+
+if(value=="Silent") value="global_matilda_silent";
+
+if(value=="Ignore") value="global_matilda_ignore";
+
+log("Choice mapped as "+value) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Define lists of Wi-Fi networks</name>
+    <script>// fill these variables with the SSID names of 
+// places you know:
+
+// these should all be lowercase! 
+
+// note that index 0 of each list is not an SSID but the return value for Matilda-3.
+
+global_matilda_home = newList() ;//empty list
+addElement(global_matilda_home, "home") ;//location
+addElement(global_matilda_home, "gbdk") ;
+addElement(global_matilda_home, "gbdk-guest") ;
+
+global_matilda_neighborhood = newList() ;//empty list
+addElement(global_matilda_neighborhood, "neighborhood") ;//location
+
+global_matilda_family = newList() ;//empty list
+addElement(global_matilda_family, "family") ;//location
+addElement(global_matilda_family, "gblan" ) ;
+addElement(global_matilda_family, "wlan" ) ;
+addElement(global_matilda_family, "neverhood" ) ;
+
+global_matilda_friends = newList() ;//empty list
+addElement(global_matilda_friends, "friends") ;//location
+
+global_matilda_work = newList() ;//empty list
+addElement(global_matilda_work, "work") ;//location
+addElement(global_matilda_work, "sds" ) ;
+addElement(global_matilda_work, "altapay" ) ;
+
+global_matilda_silent = newList() ;//empty list
+addElement(global_matilda_silent, "silent") ;//location
+//addElement(global_matilda_silent, doctor) ;
+//addElement(global_matilda_silent, dentist) ;
+
+// use the ignore list to "blacklist" certain networks so that Matilda will not use them for location detection. This is particularly useful for generic SSIDs that may appear in more than one area. 
+global_matilda_ignore = newList() ;//empty list
+addElement(global_matilda_ignore, "ignore") ;//location
+addElement(global_matilda_ignore, "ko_wag16" ) ;
+addElement(global_matilda_ignore, "linksys" ) ;
+
+global_matilda_areas = newList() ;//empty list
+addElement(global_matilda_areas
+ ,global_matilda_home ) ;
+addElement(global_matilda_areas
+ ,global_matilda_neighborhood ) ;
+addElement(global_matilda_areas
+ ,global_matilda_family ) ;
+addElement(global_matilda_areas
+ ,global_matilda_friends ) ;
+addElement(global_matilda_areas
+ ,global_matilda_work ) ;
+addElement(global_matilda_areas
+ ,global_matilda_silent ) ;
+addElement(global_matilda_areas
+ ,global_matilda_ignore ) ;
+
+/*/debug:*/
+log("home="   + global_matilda_home) ;
+log("family=" + global_matilda_family) ;
+log("silent=" + global_matilda_silent) ;
+
+/* test: */
+log(global_matilda_areas) ;
+
+</script>
+  </action>
+  <action type="execute_flows">
+    <useDefaultName>true</useDefaultName>
+    <name>Execute Flows: Matilda 4: Add SSIDs to area</name>
+    <includeFlowNamePatternList>Matilda 4: Add SSIDs to area</includeFlowNamePatternList>
+    <excludeFlowNamePatternList></excludeFlowNamePatternList>
+    <skipDisabledFlowsWithoutError>false</skipDisabledFlowsWithoutError>
+    <waitForFlowsToFinish>false</waitForFlowsToFinish>
+    <returnLocalVariablesToCallingFlow>false</returnLocalVariablesToCallingFlow>
+  </action>
+  <action type="execute_flows">
+    <useDefaultName>true</useDefaultName>
+    <name>Execute Flows: Matilda 5: edit areas</name>
+    <includeFlowNamePatternList>Matilda 5: edit areas</includeFlowNamePatternList>
+    <excludeFlowNamePatternList></excludeFlowNamePatternList>
+    <skipDisabledFlowsWithoutError>false</skipDisabledFlowsWithoutError>
+    <waitForFlowsToFinish>false</waitForFlowsToFinish>
+    <returnLocalVariablesToCallingFlow>false</returnLocalVariablesToCallingFlow>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>global_matilda_can_add=false ;</name>
+    <script>//set: no more networks to add:
+global_matilda_can_add=false ;</script>
+  </action>
+  <action type="input_dialog">
+    <useDefaultName>false</useDefaultName>
+    <name>Input Dialog: Assign to which area?</name>
+    <title>Assign to which area? </title>
+    <inputDialogType>SINGLE_CHOICE_MENU</inputDialogType>
+    <prompt></prompt>
+    <inputValues>Home,Neighborhood,Family,Friends,Work,Silent,Ignore</inputValues>
+    <defaultValue></defaultValue>
+    <titleFontSize>DEFAULT</titleFontSize>
+    <promptFontSize>DEFAULT</promptFontSize>
+    <fontSize>DEFAULT</fontSize>
+    <timeoutEnabled>false</timeoutEnabled>
+    <timeout>60000</timeout>
+    <defaultValueOnTimeout></defaultValueOnTimeout>
+    <showWhenLocked>false</showWhenLocked>
+    <turnScreenOn>false</turnScreenOn>
+    <keepScreenOn>false</keepScreenOn>
+    <enlargeDialogWidth>false</enlargeDialogWidth>
+  </action>
+  <action type="input_dialog">
+    <useDefaultName>false</useDefaultName>
+    <name>Input Dialog: Edit which area?</name>
+    <title>Edit which area? </title>
+    <inputDialogType>SINGLE_CHOICE_MENU</inputDialogType>
+    <prompt></prompt>
+    <inputValues>Home,Neighborhood,Family,Friends,Work,Silent,Ignore</inputValues>
+    <defaultValue></defaultValue>
+    <titleFontSize>DEFAULT</titleFontSize>
+    <promptFontSize>DEFAULT</promptFontSize>
+    <fontSize>DEFAULT</fontSize>
+    <timeoutEnabled>false</timeoutEnabled>
+    <timeout>60000</timeout>
+    <defaultValueOnTimeout></defaultValueOnTimeout>
+    <showWhenLocked>false</showWhenLocked>
+    <turnScreenOn>false</turnScreenOn>
+    <keepScreenOn>false</keepScreenOn>
+    <enlargeDialogWidth>false</enlargeDialogWidth>
+  </action>
+  <action type="input_dialog">
+    <useDefaultName>false</useDefaultName>
+    <name>Input Dialog: reset or display?</name>
+    <title>Really reset Wi-Fi lists?</title>
+    <inputDialogType>SINGLE_CHOICE_MENU</inputDialogType>
+    <prompt></prompt>
+    <inputValues>Yes reset,No just show current values</inputValues>
+    <defaultValue></defaultValue>
+    <titleFontSize>DEFAULT</titleFontSize>
+    <promptFontSize>DEFAULT</promptFontSize>
+    <fontSize>DEFAULT</fontSize>
+    <timeoutEnabled>false</timeoutEnabled>
+    <timeout>60000</timeout>
+    <defaultValueOnTimeout></defaultValueOnTimeout>
+    <showWhenLocked>false</showWhenLocked>
+    <turnScreenOn>false</turnScreenOn>
+    <keepScreenOn>false</keepScreenOn>
+    <enlargeDialogWidth>false</enlargeDialogWidth>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Matilda readme </name>
+    <script>/*
+Readme file goes here
+
+*/</script>
+  </action>
+  <action type="notification_screen">
+    <useDefaultName>true</useDefaultName>
+    <name>Notification on Screen: Area "{value}" not found! (long)</name>
+    <showText>true</showText>
+    <text>Area "{value}" not found!</text>
+    <widgetName></widgetName>
+    <width>200</width>
+    <height>250</height>
+    <stretchToFillArea>false</stretchToFillArea>
+    <opacity>1.00</opacity>
+    <durationLong>true</durationLong>
+    <customPosition>false</customPosition>
+    <gravityType>TOP_LEFT</gravityType>
+    <xOffset>0</xOffset>
+    <yOffset>0</yOffset>
+  </action>
+  <action type="notification_screen">
+    <useDefaultName>true</useDefaultName>
+    <name>Notification on Screen: Matilda areas have been reset! (long)</name>
+    <showText>true</showText>
+    <text>Matilda areas have been reset!</text>
+    <widgetName></widgetName>
+    <width>200</width>
+    <height>250</height>
+    <stretchToFillArea>false</stretchToFillArea>
+    <opacity>1.00</opacity>
+    <durationLong>true</durationLong>
+    <customPosition>false</customPosition>
+    <gravityType>TOP_LEFT</gravityType>
+    <xOffset>0</xOffset>
+    <yOffset>0</yOffset>
+  </action>
+  <action type="notification_screen">
+    <useDefaultName>true</useDefaultName>
+    <name>Notification on Screen: Networks assigned to "{value}" area (long)</name>
+    <showText>true</showText>
+    <text>Networks assigned to "{value}" area</text>
+    <widgetName></widgetName>
+    <width>200</width>
+    <height>250</height>
+    <stretchToFillArea>false</stretchToFillArea>
+    <opacity>1.00</opacity>
+    <durationLong>true</durationLong>
+    <customPosition>false</customPosition>
+    <gravityType>TOP_LEFT</gravityType>
+    <xOffset>0</xOffset>
+    <yOffset>0</yOffset>
+  </action>
+  <action type="notification_screen">
+    <useDefaultName>true</useDefaultName>
+    <name>Notification on Screen: Nothing changed (long)</name>
+    <showText>true</showText>
+    <text>Nothing changed</text>
+    <widgetName></widgetName>
+    <width>200</width>
+    <height>250</height>
+    <stretchToFillArea>false</stretchToFillArea>
+    <opacity>1.00</opacity>
+    <durationLong>true</durationLong>
+    <customPosition>false</customPosition>
+    <gravityType>TOP_LEFT</gravityType>
+    <xOffset>0</xOffset>
+    <yOffset>0</yOffset>
+  </action>
+  <action type="notification_screen">
+    <useDefaultName>true</useDefaultName>
+    <name>Notification on Screen: See notification! (long)</name>
+    <showText>true</showText>
+    <text>See notification!</text>
+    <widgetName></widgetName>
+    <width>200</width>
+    <height>250</height>
+    <stretchToFillArea>false</stretchToFillArea>
+    <opacity>1.00</opacity>
+    <durationLong>true</durationLong>
+    <customPosition>false</customPosition>
+    <gravityType>TOP_LEFT</gravityType>
+    <xOffset>0</xOffset>
+    <yOffset>0</yOffset>
+  </action>
+  <action type="notification_status_bar">
+    <useDefaultName>true</useDefaultName>
+    <name>Notification on Statusbar: Known networks Information ID 183</name>
+    <notificationIconType>BUILTIN</notificationIconType>
+    <notificationIcon>INFO</notificationIcon>
+    <customNotificationIcon></customNotificationIcon>
+    <title>Known networks</title>
+    <message></message>
+    <sound>false</sound>
+    <vibrate>false</vibrate>
+    <flashLED>false</flashLED>
+    <flashLEDColor>#ff00ff00</flashLEDColor>
+    <flashLEDOn>500</flashLEDOn>
+    <flashLEDOff>500</flashLEDOff>
+    <flagLocalOnly>false</flagLocalOnly>
+    <accentColorEnabled>false</accentColorEnabled>
+    <accentColor>#ffff0000</accentColor>
+    <flagOngoing>false</flagOngoing>
+    <flagNoClear>false</flagNoClear>
+    <notificationIDEnabled>true</notificationIDEnabled>
+    <notificationID>183</notificationID>
+    <category>DEFAULT</category>
+    <priority>DEFAULT</priority>
+    <visibility>PRIVATE</visibility>
+    <messageBigEnabled>true</messageBigEnabled>
+    <messageBig>{global_matilda_home},{global_matilda_family},{global_matilda_friends},{global_matilda_work},{global_matilda_silent},{global_matilda_ignore} </messageBig>
+    <showProgressbar>false</showProgressbar>
+    <progressbarIndeterminate>false</progressbarIndeterminate>
+    <progressbarValue>0</progressbarValue>
+    <progressbarMaximum>100</progressbarMaximum>
+    <largeIconEnabled>false</largeIconEnabled>
+    <largeIcon></largeIcon>
+    <group></group>
+    <isGroupSummary>false</isGroupSummary>
+  </action>
+  <action type="notification_status_bar">
+    <useDefaultName>false</useDefaultName>
+    <name>Notification: new Wi-Fi networks detected</name>
+    <notificationIconType>BUILTIN</notificationIconType>
+    <notificationIcon>NETWORK_WIFI</notificationIcon>
+    <customNotificationIcon></customNotificationIcon>
+    <title>New Wi-Fi networks detected</title>
+    <message></message>
+    <sound>false</sound>
+    <vibrate>false</vibrate>
+    <flashLED>false</flashLED>
+    <flashLEDColor>#ff00ff00</flashLEDColor>
+    <flashLEDOn>500</flashLEDOn>
+    <flashLEDOff>500</flashLEDOff>
+    <flagLocalOnly>false</flagLocalOnly>
+    <accentColorEnabled>false</accentColorEnabled>
+    <accentColor>#ffff0000</accentColor>
+    <flagOngoing>false</flagOngoing>
+    <flagNoClear>false</flagNoClear>
+    <notificationIDEnabled>true</notificationIDEnabled>
+    <notificationID>181</notificationID>
+    <category>EVENT</category>
+    <priority>MIN</priority>
+    <visibility>PUBLIC</visibility>
+    <messageBigEnabled>true</messageBigEnabled>
+    <messageBig>{global_matilda_new}</messageBig>
+    <showProgressbar>false</showProgressbar>
+    <progressbarIndeterminate>false</progressbarIndeterminate>
+    <progressbarValue>0</progressbarValue>
+    <progressbarMaximum>100</progressbarMaximum>
+    <largeIconEnabled>false</largeIconEnabled>
+    <largeIcon></largeIcon>
+    <group></group>
+    <isGroupSummary>false</isGroupSummary>
+    <actionRef text="Add..." icon="SAVE" remove="true">Execute Flows: Matilda 4: Add SSIDs to area</actionRef>
+    <actionRef text="Edit... " icon="EDIT" remove="true">Execute Flows: Matilda 5: edit areas</actionRef>
+    <actionRef text="Clear" icon="REMOVE" remove="true">Script: global_matilda_can_add=false ; //nothing new global_matilda_new=newList() ; //empty list</actionRef>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Remove network</name>
+    <script>log(value);</script>
+  </action>
+  <action type="input_dialog">
+    <useDefaultName>false</useDefaultName>
+    <name>Remove which network?</name>
+    <title>Remove which network?</title>
+    <inputDialogType>SINGLE_CHOICE_MENU</inputDialogType>
+    <prompt></prompt>
+    <inputValues>{{value}} </inputValues>
+    <defaultValue></defaultValue>
+    <titleFontSize>DEFAULT</titleFontSize>
+    <promptFontSize>DEFAULT</promptFontSize>
+    <fontSize>DEFAULT</fontSize>
+    <timeoutEnabled>false</timeoutEnabled>
+    <timeout>60000</timeout>
+    <defaultValueOnTimeout></defaultValueOnTimeout>
+    <showWhenLocked>false</showWhenLocked>
+    <turnScreenOn>false</turnScreenOn>
+    <keepScreenOn>false</keepScreenOn>
+    <enlargeDialogWidth>false</enlargeDialogWidth>
+  </action>
+  <action type="remove_notification_status_bar">
+    <useDefaultName>false</useDefaultName>
+    <name>Remove Wi-Fi Notification</name>
+    <automagicNotifications>true</automagicNotifications>
+    <all>false</all>
+    <notificationID>181</notificationID>
+    <overall>true</overall>
+    <packageName></packageName>
+    <allOfApp>true</allOfApp>
+    <filterNotificationID></filterNotificationID>
+    <textMatchField>TEXT</textMatchField>
+    <textMatchType>CONTAINS_TEXT</textMatchType>
+    <textFilter></textFilter>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to family </name>
+    <script>result = addAllElements(global_matilda_family, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to friends </name>
+    <script>result = addAllElements(global_matilda_friends, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to home </name>
+    <script>result = addAllElements(global_matilda_home, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to ignore </name>
+    <script>result = addAllElements(global_matilda_ignore, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to neighborhood</name>
+    <script>result = addAllElements(global_matilda_neighborhood, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to silent</name>
+    <script>result = addAllElements(global_matilda_silent, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Script: add SSIDs to work</name>
+    <script>result = addAllElements(global_matilda_work, global_matilda_new) ;
+log("added="+result) ;</script>
+  </action>
+  <action type="script">
+    <useDefaultName>true</useDefaultName>
+    <name>Script: global_matilda_can_add=false ; //nothing new global_matilda_new=newList() ; //empty list</name>
+    <script>global_matilda_can_add=false ; //nothing new
+global_matilda_new=newList() ; //empty list</script>
+  </action>
+  <action type="script">
+    <useDefaultName>false</useDefaultName>
+    <name>Set global_geo</name>
+    <script>global_geo = global_matilda_geo</script>
+  </action>
+  <action type="set_network_location_state">
+    <useDefaultName>true</useDefaultName>
+    <name>Set Network Location State: On</name>
+    <enable>true</enable>
+  </action>
+  <action type="sleep">
+    <useDefaultName>true</useDefaultName>
+    <name>Sleep: 5m (allow device sleep)</name>
+    <duration>5m</duration>
+    <keepDeviceAwake>false</keepDeviceAwake>
+    <allowWakeupFromDeviceIdle>false</allowWakeupFromDeviceIdle>
+  </action>
+  <action type="wifi_scan">
+    <useDefaultName>true</useDefaultName>
+    <name>WiFi Scan</name>
+  </action>
+  <flow type="flow">
+    <name>Matilda 0: readme</name>
+    <group>T Matilda</group>
+    <enabled>false</enabled>
+    <executionPolicy>PARALLEL</executionPolicy>
+    <triggercontainer id="t1" x="70.0" y="52.5" />
+    <actioncontainer id="t2" x="69.99994" y="227.49994">Matilda readme </actioncontainer>
+    <connection from="t1" to="t2" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+  </flow>
+  <flow type="flow">
+    <name>Matilda 1: init</name>
+    <group>T Matilda</group>
+    <enabled>false</enabled>
+    <executionPolicy>PARALLEL</executionPolicy>
+    <triggercontainer id="t1" x="70.0" y="122.5" />
+    <actioncontainer id="t2" x="70.0" y="262.5">Input Dialog: reset or display?</actioncontainer>
+    <conditioncontainer id="t3" x="70.0" y="402.5">Expression: value == "Yes reset"</conditioncontainer>
+    <actioncontainer id="t4" x="-35.0" y="542.5">Define lists of Wi-Fi networks</actioncontainer>
+    <actioncontainer id="t5" x="-35.0" y="682.5">Notification on Screen: Matilda areas have been reset! (long)</actioncontainer>
+    <actioncontainer id="t6" x="210.0" y="542.5">Notification on Statusbar: Known networks Information ID 183</actioncontainer>
+    <actioncontainer id="t7" x="210.0" y="682.5">Notification on Screen: See notification! (long)</actioncontainer>
+    <connection from="t1" to="t2" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t2" to="t3" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t3" to="t4" type="TRUE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t3" to="t6" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t4" to="t5" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t6" to="t7" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+  </flow>
+  <flow type="flow">
+    <name>Matilda 2: scan</name>
+    <group>T Matilda</group>
+    <enabled>false</enabled>
+    <executionPolicy>SKIP</executionPolicy>
+    <triggercontainer id="t1" x="105.0" y="87.5" />
+    <actioncontainer id="t2" x="105.0" y="227.5">Set Network Location State: On</actioncontainer>
+    <actioncontainer id="t3" x="105.0" y="367.5">WiFi Scan</actioncontainer>
+    <connection from="t1" to="t2" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t2" to="t3" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+  </flow>
+  <flow type="flow">
+    <name>Matilda 3: scan results</name>
+    <group>T Matilda</group>
+    <enabled>false</enabled>
+    <executionPolicy>SKIP</executionPolicy>
+    <triggercontainer id="t1" x="105.0" y="-262.5">
+      <trigger>WiFi Scan Results Available</trigger>
+    </triggercontainer>
+    <actioncontainer id="t2" x="105.0" y="437.5">Notification: new Wi-Fi networks detected</actioncontainer>
+    <actioncontainer id="t3" x="-70.0" y="367.5">Calls Flow: add</actioncontainer>
+    <actioncontainer id="t4" x="-70.0" y="507.5">Calls Flow: edit</actioncontainer>
+    <conditioncontainer id="t5" x="105.0" y="157.5">Expression: match_found</conditioncontainer>
+    <actioncontainer id="t6" x="105.0" y="17.5">Check result</actioncontainer>
+    <actioncontainer id="t7" x="105.0" y="-122.5">Remove Wi-Fi Notification</actioncontainer>
+    <conditioncontainer id="t8" x="105.0" y="297.5">New networks found?</conditioncontainer>
+    <actioncontainer id="t9" x="315.0" y="157.5">Set global_geo</actioncontainer>
+    <actioncontainer id="t10" x="315.0" y="297.5">Sleep: 5m (allow device sleep)</actioncontainer>
+    <connection from="t1" to="t7" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t2" to="t10" type="NORMAL" sourcePosition="EAST" targetPosition="SOUTH" />
+    <connection from="t3" to="t2" type="NORMAL" sourcePosition="SOUTH" targetPosition="WEST" />
+    <connection from="t4" to="t2" type="NORMAL" sourcePosition="NORTH" targetPosition="WEST" />
+    <connection from="t5" to="t9" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t5" to="t8" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t6" to="t5" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t7" to="t6" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t8" to="t2" type="TRUE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t8" to="t10" type="FALSE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t9" to="t10" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+  </flow>
+  <flow type="flow">
+    <name>Matilda 4: Add SSIDs to area</name>
+    <group>T Matilda</group>
+    <enabled>false</enabled>
+    <executionPolicy>SKIP</executionPolicy>
+    <triggercontainer id="t1" x="70.0" y="52.5" />
+    <actioncontainer id="t2" x="245.0" y="332.5">Notification on Screen: Nothing changed (long)</actioncontainer>
+    <conditioncontainer id="t3" x="70.0" y="332.5">Valid choice?</conditioncontainer>
+    <actioncontainer id="t4" x="245.0" y="472.5">Script: add SSIDs to home </actioncontainer>
+    <actioncontainer id="t5" x="70.0" y="192.5">Input Dialog: Assign to which area?</actioncontainer>
+    <conditioncontainer id="t6" x="70.0" y="752.5">Expression: value == "Family"</conditioncontainer>
+    <conditioncontainer id="t7" x="70.0" y="892.5">Expression: value == "Friends"</conditioncontainer>
+    <conditioncontainer id="t8" x="70.0" y="1032.5">Expression: value == "Work"</conditioncontainer>
+    <conditioncontainer id="t9" x="70.0" y="1172.5">Expression: value == "Silent"</conditioncontainer>
+    <conditioncontainer id="t10" x="70.0" y="1312.5">Expression: value == "Ignore"</conditioncontainer>
+    <actioncontainer id="t11" x="70.0" y="1452.5">Notification on Screen: Area "{value}" not found! (long)</actioncontainer>
+    <actioncontainer id="t12" x="245.0" y="752.5">Script: add SSIDs to family </actioncontainer>
+    <actioncontainer id="t13" x="245.0" y="892.5">Script: add SSIDs to friends </actioncontainer>
+    <actioncontainer id="t14" x="245.0" y="1032.5">Script: add SSIDs to work</actioncontainer>
+    <actioncontainer id="t15" x="245.0" y="1172.5">Script: add SSIDs to silent</actioncontainer>
+    <actioncontainer id="t16" x="245.0" y="1312.5">Script: add SSIDs to ignore </actioncontainer>
+    <actioncontainer id="t17" x="350.0" y="1592.5">global_matilda_can_add=false ;</actioncontainer>
+    <actioncontainer id="t18" x="350.0" y="1452.5">Remove Wi-Fi Notification</actioncontainer>
+    <actioncontainer id="t19" x="350.0" y="1732.5">Notification on Screen: Networks assigned to "{value}" area (long)</actioncontainer>
+    <conditioncontainer id="t20" x="70.0" y="472.5">Expression: value == "Home"</conditioncontainer>
+    <conditioncontainer id="t21" x="70.0" y="612.5">Expression: value == "Neighborhood"</conditioncontainer>
+    <actioncontainer id="t22" x="245.0" y="612.5">Script: add SSIDs to neighborhood</actioncontainer>
+    <connection from="t1" to="t5" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t3" to="t20" type="TRUE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t3" to="t2" type="FALSE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t4" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+    <connection from="t5" to="t3" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t6" to="t7" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t6" to="t12" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t7" to="t8" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t7" to="t13" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t8" to="t9" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t8" to="t14" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t9" to="t10" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t9" to="t15" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t10" to="t16" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t10" to="t11" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t12" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+    <connection from="t13" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+    <connection from="t14" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+    <connection from="t15" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+    <connection from="t16" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+    <connection from="t17" to="t19" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t18" to="t17" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t20" to="t4" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t20" to="t21" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t21" to="t22" type="TRUE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t21" to="t6" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t22" to="t18" type="NORMAL" sourcePosition="EAST" targetPosition="NORTH" />
+  </flow>
+  <flow type="flow">
+    <name>Matilda 5: edit areas</name>
+    <group>T Matilda</group>
+    <enabled>false</enabled>
+    <executionPolicy>SKIP</executionPolicy>
+    <triggercontainer id="t1" x="70.0" y="52.5" />
+    <actioncontainer id="t2" x="245.0" y="332.5">Notification on Screen: Nothing changed (long)</actioncontainer>
+    <conditioncontainer id="t3" x="70.0" y="332.5">Valid choice?</conditioncontainer>
+    <actioncontainer id="t4" x="70.0" y="192.5">Input Dialog: Edit which area?</actioncontainer>
+    <conditioncontainer id="t5" x="70.0" y="752.5">Edit family? </conditioncontainer>
+    <conditioncontainer id="t6" x="70.0" y="1172.5">Edit silent? </conditioncontainer>
+    <conditioncontainer id="t7" x="70.0" y="1312.5">Edit ignore? </conditioncontainer>
+    <conditioncontainer id="t8" x="70.0" y="1032.5">Edit work? </conditioncontainer>
+    <conditioncontainer id="t9" x="70.0" y="892.5">Edit friends? </conditioncontainer>
+    <conditioncontainer id="t10" x="70.0" y="472.5">Edit home? </conditioncontainer>
+    <conditioncontainer id="t11" x="70.0" y="612.5">Edit neighborhood? </conditioncontainer>
+    <actioncontainer id="t12" x="-140.0" y="402.5">Convert choice to list name</actioncontainer>
+    <actioncontainer id="t13" x="-140.0" y="542.5">Remove which network?</actioncontainer>
+    <actioncontainer id="t14" x="-140.0" y="682.5">Remove network</actioncontainer>
+    <connection from="t1" to="t4" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t3" to="t2" type="FALSE" sourcePosition="EAST" targetPosition="WEST" />
+    <connection from="t3" to="t12" type="TRUE" sourcePosition="WEST" targetPosition="NORTH" />
+    <connection from="t4" to="t3" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t5" to="t9" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t6" to="t7" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t8" to="t6" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t9" to="t8" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t10" to="t11" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t11" to="t5" type="FALSE" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t12" to="t13" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+    <connection from="t13" to="t14" type="NORMAL" sourcePosition="SOUTH" targetPosition="NORTH" />
+  </flow>
+</data>
